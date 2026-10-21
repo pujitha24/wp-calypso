@@ -314,10 +314,10 @@ __metadata:
     "@wordpress/components": "npm:^28.23.0"
     "@wordpress/compose": "npm:^8.2.0"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     "@wordpress/i18n": "npm:^6.21.0"
     "@wordpress/plugins": "npm:^7.48.0"
-    "@wordpress/readable-js-assets-webpack-plugin": "npm:^3.57.0"
+    "@wordpress/readable-js-assets-webpack-plugin": "npm:^4.0.0"
     copy-webpack-plugin: "npm:^14.0.0"
     postcss-prefix-selector: "npm:^1.16.1"
     sass: "npm:1.77.8"
@@ -601,7 +601,7 @@ __metadata:
     "@wordpress/admin-ui": "npm:^2.3.0"
     "@wordpress/components": "npm:^37.0.0"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     "@wordpress/element": "npm:^8.0.0"
     "@wordpress/icons": "npm:^13.3.0"
     autoprefixer: "npm:^10.4.21"
@@ -733,7 +733,7 @@ __metadata:
     "@swc/core": "npm:^1.11.24"
     "@types/webpack-env": "npm:^1.18.8"
     "@wordpress/browserslist-config": "npm:^6.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     autoprefixer: "npm:^10.4.21"
     babel-loader: "npm:^8.2.3"
     browserslist: "npm:^4.24.5"
@@ -755,7 +755,7 @@ __metadata:
     yargs: "npm:^17.7.2"
   peerDependencies:
     postcss: ^8.5.15
-    webpack: ^5.101.0
+    webpack: ^5.111.1
   bin:
     build-app-languages: ./bin/build-app-languages.js
     calypso-build: ./bin/calypso-build.js
@@ -1530,14 +1530,14 @@ __metadata:
     "@wordpress/components": "npm:^37.0.0"
     "@wordpress/compose": "npm:^8.2.0"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     "@wordpress/dom-ready": "npm:^4.48.0"
     "@wordpress/editor": "npm:^14.51.0"
     "@wordpress/i18n": "npm:^6.21.0"
     "@wordpress/icons": "npm:^13.3.0"
     "@wordpress/plugins": "npm:^7.48.0"
     "@wordpress/private-apis": "npm:^1.51.0"
-    "@wordpress/readable-js-assets-webpack-plugin": "npm:^3.57.0"
+    "@wordpress/readable-js-assets-webpack-plugin": "npm:^4.0.0"
     "@wordpress/router": "npm:^1.48.0"
     "@wordpress/url": "npm:^4.48.0"
     copy-webpack-plugin: "npm:^14.0.0"
@@ -1969,7 +1969,7 @@ __metadata:
     "@wordpress/icons": "npm:^13.3.0"
     "@wordpress/is-shallow-equal": "npm:^5.48.0"
     "@wordpress/primitives": "npm:^4.48.0"
-    "@wordpress/readable-js-assets-webpack-plugin": "npm:^3.57.0"
+    "@wordpress/readable-js-assets-webpack-plugin": "npm:^4.0.0"
     clsx: "npm:^2.1.1"
     moment: "npm:^2.30.1"
     new-github-issue-url: "npm:^0.2.1"
@@ -2066,7 +2066,7 @@ __metadata:
     "@wordpress/base-styles": "npm:^9.1.0"
     "@wordpress/components": "npm:^37.0.0"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     "@wordpress/icons": "npm:^13.3.0"
     "@wordpress/ui": "npm:^0.18.0"
     autoprefixer: "npm:^10.4.21"
@@ -2492,8 +2492,8 @@ __metadata:
     "@automattic/survicate": "workspace:^"
     "@automattic/viewport": "workspace:^"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
-    "@wordpress/readable-js-assets-webpack-plugin": "npm:^3.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
+    "@wordpress/readable-js-assets-webpack-plugin": "npm:^4.0.0"
     webpack: "npm:^5.111.1"
   peerDependencies:
     postcss: "*"
@@ -2662,7 +2662,7 @@ __metadata:
     "@automattic/calypso-typescript-config": "workspace:^"
     semver: "npm:^7.7.2"
   peerDependencies:
-    webpack: ^5.99.8
+    webpack: ^5.111.1
   languageName: unknown
   linkType: soft
 
@@ -2677,7 +2677,7 @@ __metadata:
     rtlcss: "npm:^3.1.2"
     webpack: "npm:^5.111.1"
   peerDependencies:
-    webpack: ^5.99.8
+    webpack: ^5.111.1
   languageName: unknown
   linkType: soft
 
@@ -2723,7 +2723,7 @@ __metadata:
     "@wordpress/components": "npm:^37.0.0"
     "@wordpress/compose": "npm:^8.2.0"
     "@wordpress/data": "npm:^10.48.0"
-    "@wordpress/dependency-extraction-webpack-plugin": "npm:^6.57.0"
+    "@wordpress/dependency-extraction-webpack-plugin": "npm:^7.0.0"
     "@wordpress/dom-ready": "npm:^4.48.0"
     "@wordpress/edit-post": "npm:^8.48.0"
     "@wordpress/edit-site": "npm:^6.48.0"
@@ -13082,14 +13082,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wordpress/dependency-extraction-webpack-plugin@npm:^6.57.0":
-  version: 6.57.0
-  resolution: "@wordpress/dependency-extraction-webpack-plugin@npm:6.57.0"
+"@wordpress/dependency-extraction-webpack-plugin@npm:^7.0.0":
+  version: 7.0.0
+  resolution: "@wordpress/dependency-extraction-webpack-plugin@npm:7.0.0"
   dependencies:
     json2php: "npm:^0.0.9"
   peerDependencies:
     webpack: ^5.0.0
-  checksum: 8285af654bab65577f1cc2b39509a0c359cdd7f09c71699a3116daaf9ed9fd1ba674c41605640343e6142288fcf3c86809ac9bb43bcb93936bf79ecc53a4711d
+  checksum: 7e770f2bed3f8a757fc12496c963ba01ca0a1d06778b1246f4dd99cf96446c10117d7e9325573d0924b9ab3eac2a0be8bc9b80a82419366e38f5b15719dd4562
   languageName: node
   linkType: hard
 
@@ -13965,12 +13965,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@wordpress/readable-js-assets-webpack-plugin@npm:^3.57.0":
-  version: 3.57.0
-  resolution: "@wordpress/readable-js-assets-webpack-plugin@npm:3.57.0"
+"@wordpress/readable-js-assets-webpack-plugin@npm:^4.0.0":
+  version: 4.0.0
+  resolution: "@wordpress/readable-js-assets-webpack-plugin@npm:4.0.0"
   peerDependencies:
     webpack: ^4.8.3 || ^5.0.0
-  checksum: 14f2dc4b6cc3d1bd1bf6757badaf04f1ddcdef31dc580975044e2b95a7b9d5d4ee7bcbe34f793d2350ec10b2c80c7f0a4a08ef9b975b08dcc78994000bae9c3d
+  checksum: 6b55bc5ccfb4c4307dfc4c21db83ba7c62f81c06728a7b7211f366d8da8f2d4e297970900f0f341ee5bbfcfd3996d64c11ac88aaca55ab853c5aadabe84b2b1b
   languageName: node
   linkType: hard
 
@@ -21581,7 +21581,7 @@ __metadata:
     "@wordpress/data": "npm:^10.48.0"
     "@wordpress/element": "npm:^8.0.0"
     "@wordpress/i18n": "npm:^6.21.0"
-    "@wordpress/readable-js-assets-webpack-plugin": "npm:^3.57.0"
+    "@wordpress/readable-js-assets-webpack-plugin": "npm:^4.0.0"
     clsx: "npm:^2.1.1"
     copy-webpack-plugin: "npm:^14.0.0"
     glob: "npm:^7.2.3"

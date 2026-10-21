@@ -57,7 +57,7 @@
 		"@automattic/calypso-apps-builder": "workspace:^",
 		"@automattic/calypso-build": "workspace:^",
 		"@automattic/calypso-eslint-config": "workspace:^",
-		"@wordpress/dependency-extraction-webpack-plugin": "^6.57.0",
+		"@wordpress/dependency-extraction-webpack-plugin": "^7.0.0",
 		"npm-run-all": "^4.1.5",
 		"postcss": "^8.5.15",
 		"webpack": "^5.111.1",
