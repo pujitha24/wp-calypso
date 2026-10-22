@@ -140,7 +140,7 @@ export function recordLicenseViewChanges(
 
 export const getLicenseId = ( license: JetpackLicense ) => String( license.license_id );
 
-function SiteCell( {
+export function SiteCell( {
 	license,
 	isAgencyOwner,
 	isProvisioning,
@@ -254,7 +254,7 @@ function TitanTrialLine( { license, locale }: { license: JetpackLicense; locale:
 	);
 }
 
-function ProductCell( { license, locale }: { license: JetpackLicense; locale: string } ) {
+export function ProductCell( { license, locale }: { license: JetpackLicense; locale: string } ) {
 	const transferredUntil = license.meta?.a4a_transferred_subscription_expiration;
 	const clientEmail = license.referral?.client?.email;
 	const isTitan = isPressableTitanLicense( license );

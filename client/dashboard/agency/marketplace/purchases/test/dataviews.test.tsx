@@ -3,7 +3,7 @@
  */
 import { JetpackLicenseFilter, JetpackLicenseSortField } from '@automattic/api-core';
 import { render, screen } from '@testing-library/react';
-import { DEFAULT_VIEW, RenewalCell, getLicenseFields, toFetchOptions } from '../dataviews';
+import { DEFAULT_VIEW, ProductCell, RenewalCell, SiteCell, toFetchOptions } from '../dataviews';
 import type { JetpackLicense } from '@automattic/api-core';
 import type { View } from '@wordpress/dataviews';
 
@@ -112,26 +112,22 @@ describe( 'Titan inbox license', () => {
 		subscription: { trial_end: '2026-12-20T00:00:00+00:00', is_active_trial: true },
 	} as JetpackLicense;
 
-	const renderField = ( id: string ) => {
-		const field = getLicenseFields( {
-			locale: 'en',
-			isAgencyOwner: true,
-			provisioningLicenseKeys: new Set(),
-			onManageSite: jest.fn(),
-		} ).find( ( f ) => f.id === id );
-		const Render = field!.render!;
-		render( <Render item={ titan } field={ field! } /> );
-	};
-
 	it( 'shows the inbox count and trial under the product name', () => {
-		renderField( 'product' );
+		render( <ProductCell license={ titan } locale="en" /> );
 		expect( screen.getByText( '5 inboxes' ) ).toBeVisible();
 		expect( screen.getByText( '90-day trial ends Dec 20, 2026' ) ).toBeVisible();
 		expect( screen.queryByText( '×5' ) ).not.toBeInTheDocument();
 	} );
 
 	it( 'shows the domain in the Site column', () => {
-		renderField( 'site' );
+		render(
+			<SiteCell
+				license={ titan }
+				isAgencyOwner
+				isProvisioning={ false }
+				onManageSite={ jest.fn() }
+			/>
+		);
 		expect( screen.getByText( 'example.com' ) ).toBeVisible();
 		expect( screen.queryByText( 'Manage in Pressable' ) ).not.toBeInTheDocument();
 	} );
