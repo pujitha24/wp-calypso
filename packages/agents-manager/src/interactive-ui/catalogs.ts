@@ -51,9 +51,10 @@ const AGENTS_MANAGER_CATALOG: InteractiveUiCatalogDefinition = {
 };
 
 /**
- * Skips a provider catalog whose implementations don't match its document, so the chat doesn't
- * advertise it. As with abilities, the first with an ID wins, so a provider can't replace a
- * catalog that already works. The Basic and Agents Manager IDs are taken.
+ * Skips a provider catalog that isn't made of object schemas or whose implementations don't match
+ * its document, so the chat doesn't advertise it. As with abilities, the first with an ID wins, so
+ * a provider can't replace a catalog that already works. The Basic and Agents Manager IDs are
+ * taken.
  */
 export function filterInteractiveUiCatalogs( catalogs: InteractiveUiCatalogDefinition[] ) {
 	const takenIds = new Set( [ BASIC_CATALOG_ID, AGENTS_MANAGER_CATALOG_ID ] );
@@ -76,7 +77,7 @@ export function filterInteractiveUiCatalogs( catalogs: InteractiveUiCatalogDefin
 	} );
 }
 
-/** What the chat renders, as A2UI's `a2uiRendererCapabilities`, for its client context. */
+/** What the chat renders, as A2UI's `a2uiRendererCapabilities`, for each message's metadata. */
 export function getInteractiveUiCapabilities(
 	providerCatalogs: InteractiveUiCatalogDefinition[] = []
 ) {
