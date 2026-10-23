@@ -1559,6 +1559,78 @@ it( 'waits while closed, reads on opening, and refreshes on reopen and a fresh m
 	expect( props( fresh.result.current ).status.remaining ).toBe( 2450 );
 	expect( fetchMock ).toHaveBeenCalledTimes( 3 );
 } );
+it( 'reads on return focus while closed only while the held balance is 0', async () => {
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	const view = renderCredits();
+	await flush();
+	view.rerender( { ...defaultOptions, isOpen: false } );
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	expect( fetchMock ).toHaveBeenCalledTimes( 1 );
+
+	await receive( exhausted() );
+	expect( fetchMock ).toHaveBeenCalledTimes( 1 );
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	await flush();
+	expect( fetchMock ).toHaveBeenCalledTimes( 2 );
+	expect( props( view.result.current ).status.remaining ).toBe( 2450 );
+
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	expect( fetchMock ).toHaveBeenCalledTimes( 2 );
+} );
+it( 'spaces the reads while closed at 0 by the hidden read interval', async () => {
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	const view = renderCredits();
+	await flush();
+	view.rerender( { ...defaultOptions, isOpen: false } );
+	await receive( exhausted() );
+
+	fetchMock.mockResolvedValue( response( exhausted() ) );
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	await flush();
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	await flush();
+	expect( fetchMock ).toHaveBeenCalledTimes( 2 );
+
+	act( () => jest.advanceTimersByTime( 30 * 1000 ) );
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	await flush();
+	expect( fetchMock ).toHaveBeenCalledTimes( 3 );
+} );
+it( 'lets a zero expire while closed without reading, then reads on reopen', async () => {
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	const view = renderCredits();
+	await flush();
+	view.rerender( { ...defaultOptions, isOpen: false } );
+	await receive( { ...exhausted(), resets_at: '2026-09-21T12:00:01Z' } );
+
+	act( () => jest.advanceTimersByTime( 1000 ) );
+	await flush();
+	expect( view.result.current.trailingActions ).toBeUndefined();
+	expect( authProvider ).toHaveBeenCalledTimes( 1 );
+	expect( fetchMock ).toHaveBeenCalledTimes( 1 );
+
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	view.rerender( defaultOptions );
+	await flush();
+	expect( fetchMock ).toHaveBeenCalledTimes( 2 );
+} );
+it( 'reads nothing on focus after a site switch while closed at 0', async () => {
+	fetchMock.mockResolvedValueOnce( response( creditSnapshot() ) );
+	const view = renderCredits();
+	await flush();
+	view.rerender( { ...defaultOptions, isOpen: false } );
+	await receive( exhausted() );
+
+	view.rerender( {
+		...defaultOptions,
+		isOpen: false,
+		siteKey: '456',
+		agentConfig: { ...agentConfig, authenticationScope: { siteId: 456, userId: 1 } },
+	} );
+	act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+	expect( fetchMock ).toHaveBeenCalledTimes( 1 );
+} );
 it( 'expires the old balance and reads the next period without sending a prompt', async () => {
 	fetchMock.mockResolvedValueOnce(
 		response(
@@ -1800,12 +1872,10 @@ describe( 'credits Tracks events', () => {
 		await receive( low() );
 		await receive( { ...exhausted(), plan_tier: 'personal' } );
 		expect(
-			creditsEvents().map( ( [ name, eventProps ] ) => [ name, eventProps?.state ] )
-		).toEqual( [
-			[ 'calypso_agents_manager_credits_notice_shown', 'low' ],
-			[ 'calypso_agents_manager_credits_notice_shown', 'zero' ],
-			[ 'calypso_agents_manager_credits_meter_opened', 'zero' ],
-		] );
+			creditsEvents()
+				.filter( ( [ name ] ) => name === 'calypso_agents_manager_credits_notice_shown' )
+				.map( ( [ , eventProps ] ) => eventProps?.state )
+		).toEqual( [ 'low', 'zero' ] );
 	} );
 
 	it( 'keeps a recorded notice across a remount and a new conversation, but not for another user', async () => {
@@ -2250,6 +2320,77 @@ describe( 'credits Tracks events', () => {
 			showChat( false );
 			showChat( true );
 			expect( opened() ).toEqual( [ byItself ] );
+		} );
+
+		it( 'closes it, shows no notice and records nothing when a read while hidden finds credits again', async () => {
+			const { view, showChat, isPopoverOpen } = await renderHealthy();
+			showChat( false );
+			await receive( zero() );
+			expect( isPopoverOpen() ).toBe( true );
+			fetchMock.mockResolvedValueOnce( response( healthy() ) );
+			act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+			await flush();
+			expect( isPopoverOpen() ).toBe( false );
+			showChat( true );
+			expect( opened() ).toEqual( [] );
+			expect( view.result.current.notice ).toBeUndefined();
+		} );
+
+		it( 'keeps the zero and its opening when a read while hidden fails, then records once when shown', async () => {
+			const { view, showChat, isPopoverOpen } = await renderHealthy();
+			showChat( false );
+			await receive( zero() );
+			fetchMock.mockRejectedValueOnce( new TypeError( 'Failed to fetch' ) );
+			act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+			await flush();
+			expect( isPopoverOpen() ).toBe( true );
+			expect( props( view.result.current ).status.remaining ).toBe( 0 );
+			fetchMock.mockResolvedValueOnce( response( zero() ) );
+			showChat( true );
+			await flush();
+			expect( opened() ).toEqual( [ byItself ] );
+		} );
+
+		it( 'records nothing when credits return in the same update that shows the chat', async () => {
+			const { view, scope, showChat, isPopoverOpen } = await renderHealthy();
+			showChat( false );
+			await receive( zero() );
+			const read = deferred< unknown >();
+			fetchMock.mockReturnValueOnce( read.promise );
+			act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+			await flush();
+			await act( async () => {
+				view.rerender( { ...defaultOptions, ...scope, isOpen: true } );
+				read.resolve( response( healthy() ) );
+			} );
+			expect( isPopoverOpen() ).toBe( false );
+			expect( opened() ).toEqual( [] );
+		} );
+
+		it( 'records again when credits return and a later reply uses them up', async () => {
+			const { showChat, isPopoverOpen } = await renderHealthy();
+			await receive( zero() );
+			await receive( healthy() );
+			expect( isPopoverOpen() ).toBe( false );
+			await receive( zero() );
+			showChat( true );
+			expect( opened() ).toEqual( [ byItself, byItself ] );
+		} );
+
+		it.each( [
+			[ 'closes a popover that opened by itself', false ],
+			[ 'keeps a popover opened by a click', true ],
+		] )( '%s once a read finds credits again', async ( _case, openedByClick ) => {
+			const { view, isPopoverOpen } = await renderHealthy();
+			if ( openedByClick ) {
+				act( () => props( view.result.current ).onToggle( true ) );
+			}
+			await receive( zero() );
+			expect( isPopoverOpen() ).toBe( true );
+			fetchMock.mockResolvedValueOnce( response( healthy() ) );
+			act( () => window.dispatchEvent( new Event( 'focus' ) ) );
+			await flush();
+			expect( isPopoverOpen() ).toBe( openedByClick );
 		} );
 
 		it.each( [ 'a reply without a balance', 'the period resetting' ] )(

@@ -62,6 +62,9 @@ interface MockCreditsSeed {
 // Each sent message spends this much of the balance in the mock.
 const MOCK_COST_PER_MESSAGE = 5;
 
+// In the block editor every move from the canvas back to the chrome focuses the window.
+const MIN_HIDDEN_READ_INTERVAL = 30 * 1000;
+
 /**
  * Isolated demo source for contexts without live site credits: `?am_credits=55&am_plan=free`
  * seeds the balance. Read once when the chat mounts, so the editor's router
@@ -141,8 +144,11 @@ export interface UseCreditsResult {
  * avoid reading usage while a task is still running. Live balances also record
  * the credits Tracks events, and failed replies keep their refusal code, since
  * the chat's error only carries the reply's text. The code labels one Tracks
- * error; the refusal notice keeps it until the next turn. While AI credits are only
- * on internal test sites, pages the host says aren't in dev mode don't ask,
+ * error; the refusal notice keeps it until the next turn. A hidden chat holding
+ * a zero still reads when the page regains focus, comes online or becomes
+ * visible, since credits bought in another tab would otherwise greet the user
+ * as a stale zero on reopening. While AI credits are only on internal test
+ * sites, pages the host says aren't in dev mode don't ask,
  * since nearly every site answers 404; a balance a turn reports still shows.
  */
 export function useCredits( {
@@ -293,9 +299,22 @@ export function useCredits( {
 	const { isProcessing } = chat;
 	const processingRef = useRef( isProcessing );
 	processingRef.current = isProcessing;
+	const snapshot = balance?.scope === scope ? balance.snapshot : undefined;
+	const status = useMemo( () => {
+		if ( ! enabled ) {
+			return undefined;
+		}
+		if ( siteId ) {
+			return snapshot ? buildLiveCreditsStatus( snapshot ) : undefined;
+		}
+		return isMockEnabled && seed ? buildMockCreditsStatus( seed.plan, percent ) : undefined;
+	}, [ enabled, siteId, snapshot, isMockEnabled, seed, percent ] );
+	const isExhausted = status ? isCreditsExhausted( status ) : false;
+	// A held zero keeps reading, since a purchase elsewhere may have lifted it.
+	const shouldReadBalance = isOpen || isExhausted;
 	const refreshBalance = useCallback( async () => {
 		if (
-			! isOpen ||
+			! shouldReadBalance ||
 			! canReadBalance( scope ) ||
 			! scope.active ||
 			currentScope.current !== scope ||
@@ -332,13 +351,14 @@ export function useCredits( {
 				setUpgradeAccess( { scope, ...parseCreditsAccess( data ) } );
 			}
 			const snapshot = parseCreditSnapshot( data?.ai_credits, scope.siteId );
+			// A hidden read that fails keeps the zero it was checking, so the opening read decides.
 			if ( snapshot && Date.parse( snapshot.resets_at ) > Date.now() ) {
 				setBalance( { scope, snapshot, isFromTurn: false } );
-			} else {
+			} else if ( isOpen ) {
 				invalidateBalance();
 			}
 		} catch {
-			if ( isCurrent() ) {
+			if ( isCurrent() && isOpen ) {
 				invalidateBalance();
 			}
 		} finally {
@@ -346,22 +366,32 @@ export function useCredits( {
 				balanceRequest.current = undefined;
 			}
 		}
-	}, [ scope, isOpen, invalidateBalance ] );
+	}, [ scope, isOpen, shouldReadBalance, invalidateBalance ] );
 	useEffect( () => {
 		scope.active = true;
 		return () => {
 			scope.active = false;
 		};
 	}, [ scope ] );
+	const lastHiddenReadAt = useRef( 0 );
 	useEffect( () => {
-		if ( ! isOpen || ! scope.siteId ) {
+		if ( ! shouldReadBalance || ! scope.siteId ) {
 			return;
 		}
-		void refreshBalance();
+		if ( isOpen ) {
+			void refreshBalance();
+		}
 		const onFocus = () => {
-			if ( document.visibilityState !== 'hidden' ) {
-				void refreshBalance();
+			if ( document.visibilityState === 'hidden' ) {
+				return;
 			}
+			if ( ! isOpen ) {
+				if ( Date.now() - lastHiddenReadAt.current < MIN_HIDDEN_READ_INTERVAL ) {
+					return;
+				}
+				lastHiddenReadAt.current = Date.now();
+			}
+			void refreshBalance();
 		};
 		window.addEventListener( 'focus', onFocus );
 		window.addEventListener( 'online', onFocus );
@@ -373,7 +403,7 @@ export function useCredits( {
 			window.removeEventListener( 'online', onFocus );
 			document.removeEventListener( 'visibilitychange', onFocus );
 		};
-	}, [ scope, isOpen, refreshBalance ] );
+	}, [ scope, isOpen, shouldReadBalance, refreshBalance ] );
 	useEffect( () => {
 		if ( isProcessing ) {
 			balanceRequest.current?.abort();
@@ -383,7 +413,6 @@ export function useCredits( {
 			setRefusal( undefined );
 		}
 	}, [ isProcessing ] );
-	const snapshot = balance?.scope === scope ? balance.snapshot : undefined;
 	useEffect( () => {
 		if ( ! snapshot ) {
 			return;
@@ -393,14 +422,16 @@ export function useCredits( {
 			const delay = Date.parse( snapshot.resets_at ) - Date.now();
 			if ( delay <= 0 ) {
 				invalidateBalance();
-				void refreshBalance();
+				if ( isOpen ) {
+					void refreshBalance();
+				}
 			} else {
 				timer = setTimeout( expire, Math.min( delay, 2147483647 ) );
 			}
 		};
 		expire();
 		return () => clearTimeout( timer );
-	}, [ snapshot, invalidateBalance, refreshBalance ] );
+	}, [ snapshot, isOpen, invalidateBalance, refreshBalance ] );
 
 	const wasProcessingRef = useRef( {
 		scope,
@@ -413,7 +444,9 @@ export function useCredits( {
 			if ( scope.siteId ) {
 				if ( previous.validTerminalRevision === scope.validTerminalRevision ) {
 					invalidateBalance();
-					void refreshBalance();
+					if ( isOpen ) {
+						void refreshBalance();
+					}
 				} else if ( upgradeAccessRef.current?.scope !== scope ) {
 					// The task brought the balance but not who may buy, so read once more.
 					void refreshBalance();
@@ -430,19 +463,17 @@ export function useCredits( {
 					? previous.validTerminalRevision
 					: scope.validTerminalRevision,
 		};
-	}, [ isProcessing, enabled, isMockEnabled, seed, scope, invalidateBalance, refreshBalance ] );
+	}, [
+		isProcessing,
+		enabled,
+		isMockEnabled,
+		seed,
+		scope,
+		isOpen,
+		invalidateBalance,
+		refreshBalance,
+	] );
 
-	const status = useMemo( () => {
-		if ( ! enabled ) {
-			return undefined;
-		}
-		if ( siteId ) {
-			return snapshot ? buildLiveCreditsStatus( snapshot ) : undefined;
-		}
-		return isMockEnabled && seed ? buildMockCreditsStatus( seed.plan, percent ) : undefined;
-	}, [ enabled, siteId, snapshot, isMockEnabled, seed, percent ] );
-
-	const isExhausted = status ? isCreditsExhausted( status ) : false;
 	const isLow = status ? isCreditsLow( status ) : false;
 	// Big Sky's clearMessages empties the thread but keeps the chat's error, which then draws nowhere.
 	const isRefusedForCredits =
@@ -473,6 +504,12 @@ export function useCredits( {
 		) {
 			setIsPopoverOpen( true, { byItself: true } );
 		}
+		// A popover the zero opened would announce, and record, a balance that's gone.
+		if ( previous.scope === scope && previous.isExhausted && ! isExhausted ) {
+			setPopover( ( current ) =>
+				current?.scope === scope && current.byItself ? undefined : current
+			);
+		}
 		wasExhaustedRef.current = { scope, hasBalance: !! status, isExhausted };
 	}, [ scope, status, isExhausted, isRefusedForCredits, setIsPopoverOpen ] );
 
@@ -480,14 +517,14 @@ export function useCredits( {
 	// drain the balance while the chat is collapsed or minimised.
 	const recordedOpeningRef = useRef< typeof popover >( undefined );
 	useEffect( () => {
-		if ( ! isOpen || ! isPopoverOpen || ! popover?.byItself ) {
+		if ( ! isOpen || ! isPopoverOpen || ! popover?.byItself || ! isExhausted ) {
 			return;
 		}
 		if ( recordedOpeningRef.current !== popover ) {
 			recordedOpeningRef.current = popover;
 			recordCreditsEvent( 'calypso_agents_manager_credits_meter_opened', { trigger: 'exhausted' } );
 		}
-	}, [ isOpen, isPopoverOpen, popover, recordCreditsEvent ] );
+	}, [ isOpen, isPopoverOpen, popover, isExhausted, recordCreditsEvent ] );
 
 	const handleAction = useCallback( () => {
 		setIsPopoverOpen( false );
