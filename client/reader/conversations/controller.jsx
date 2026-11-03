@@ -1,6 +1,9 @@
+import { readTeamsQuery } from '@automattic/api-queries';
+import page from '@automattic/calypso-router';
 import AsyncLoad from 'calypso/components/async-load';
 import { sectionify } from 'calypso/lib/route';
 import { trackPageLoad, trackScrollPage } from 'calypso/reader/controller-helper';
+import { isConversationsInboxEnabled } from 'calypso/reader/lib/teams';
 import { recordTrack } from 'calypso/reader/stats';
 import getCurrentRoute from 'calypso/state/selectors/get-current-route';
 
@@ -8,6 +11,21 @@ const loadStream = () =>
 	import(
 		/* webpackChunkName: "async-load-calypso-reader-conversations-stream" */ 'calypso/reader/conversations/stream'
 	);
+
+export async function redirectToInbox( context, next ) {
+	let teams;
+	try {
+		const data = await context.queryClient.fetchQuery( readTeamsQuery() );
+		teams = data?.teams;
+	} catch {
+		// Fall through to the old feed if teams can't be loaded.
+	}
+
+	if ( isConversationsInboxEnabled( teams ) ) {
+		return page.redirect( '/reader/conversations/inbox' );
+	}
+	next();
+}
 
 export function conversations( context, next ) {
 	const basePath = sectionify( context.path );
