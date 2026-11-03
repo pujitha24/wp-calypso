@@ -171,6 +171,9 @@ export class ReaderSidebar extends Component {
 
 	renderSidebarMenu() {
 		const { path, translate, teams } = this.props;
+		const conversationsLink = isConversationsInboxEnabled( teams )
+			? '/reader/conversations/inbox'
+			: '/reader/conversations';
 
 		return (
 			<div className="sidebar-menu-container">
@@ -223,25 +226,15 @@ export class ReaderSidebar extends Component {
 					/>
 
 					<SidebarItem
-						className={
-							isConversationsInboxEnabled( teams )
-								? ReaderSidebarHelper.itemLinkClassStartsWithOneOf(
-										[ '/reader/conversations/inbox' ],
-										path,
-										{ 'sidebar-streams__conversations': true }
-									)
-								: ReaderSidebarHelper.itemLinkClass( '/reader/conversations', path, {
-										'sidebar-streams__conversations': true,
-									} )
-						}
+						className={ ReaderSidebarHelper.itemLinkClassStartsWithOneOf(
+							[ conversationsLink ],
+							path,
+							{ 'sidebar-streams__conversations': true }
+						) }
 						label={ translate( 'Conversations' ) }
 						onNavigate={ this.handleSidebarMenuClick( TrackingKeys.conversations ) }
 						customIcon={ <ReaderConversationsIcon iconSize={ 24 } viewBox="0 0 24 24" /> }
-						link={
-							isConversationsInboxEnabled( teams )
-								? '/reader/conversations/inbox'
-								: '/reader/conversations'
-						}
+						link={ conversationsLink }
 					/>
 
 					<li className="reader-sidebar__section-header" role="presentation">
